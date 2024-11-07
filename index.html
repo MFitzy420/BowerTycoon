@@ -6,79 +6,129 @@
   <title>Food & Beverage Tycoon</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    .stats, .log { margin: 20px 0; }
+    .stats, .log, .controls { margin: 20px 0; }
+    #prompt-section { position: sticky; top: 0; background: #f9f9f9; padding: 10px; border-bottom: 1px solid #ccc; }
     button { margin-top: 10px; }
+    .log { max-height: 400px; overflow-y: auto; }
   </style>
 </head>
 <body>
 
-<h1>Food & Beverage Tycoon</h1>
-<p>Grow your business from a small startup to a major market player! Manage production, sales, and navigate unexpected events.</p>
-
-<div class="stats">
-  <h3>Business Stats</h3>
-  <p id="month">Month: 1</p>
-  <p id="cash">Cash: $5000</p>
-  <p id="inventory">Inventory: 0 units</p>
-  <p id="sales">Monthly Sales: 0 units</p>
-  <p id="overheads">Monthly Overheads: $500</p>
-  <p id="price">Product Price: $15 per unit</p>
+<div id="prompt-section">
+  <h1>Food & Beverage Tycoon</h1>
+  <p>Grow your business from a small startup to a major market player! Manage production, sales, and navigate unexpected events.</p>
+  <button onclick="startGame()">Start Game</button>
 </div>
 
-<div class="log">
-  <h3>Game Log</h3>
-  <div id="log"></div>
-</div>
+<div id="game-container" style="display:none;">
+  <div class="stats">
+    <h3>Business Stats</h3>
+    <p id="brand">Brand: N/A</p>
+    <p id="product">Product Type: N/A</p>
+    <p id="month">Month: 1</p>
+    <p id="cash">Cash: -$5000 (Debt)</p>
+    <p id="inventory">Inventory: 0 units</p>
+    <p id="sales">Monthly Sales: 0 units</p>
+    <p id="overheads">Monthly Overheads: $500</p>
+    <p id="price">Product Price: $15 per unit</p>
+    <p id="outlet">Sales Outlet: None</p>
+  </div>
 
-<div class="controls">
-  <button onclick="produce()">Produce Product</button>
-  <button onclick="sell()">Sell Product</button>
-  <button onclick="advertise()">Run Advertising Campaign ($300)</button>
-  <button onclick="advanceMonth()">Next Month</button>
+  <div class="log">
+    <h3>Game Log</h3>
+    <div id="log"></div>
+  </div>
+
+  <div class="controls">
+    <button onclick="produce()">Produce Product</button>
+    <button onclick="buyOutlet()">Buy Sales Outlet</button>
+    <button onclick="advertise()">Run Advertising Campaign ($300)</button>
+    <button onclick="advanceMonth()">Next Month</button>
+  </div>
 </div>
 
 <script>
-let cash = 5000;
+let cash = -5000;  // Start in debt
 let month = 1;
 let inventory = 0;
 let monthlySales = 0;
 let overheads = 500;
 let pricePerUnit = 15;
+let margin = 0.3;
+let outlet = null;
+let brand = "";
+let productType = "";
 
 function logMessage(message) {
   const logDiv = document.getElementById("log");
   logDiv.innerHTML = `<p>${message}</p>` + logDiv.innerHTML;
 }
 
+function startGame() {
+  brand = prompt("Enter your brand name:");
+  productType = prompt("Enter your product type (e.g., Beverage, Snack):");
+  document.getElementById("brand").textContent = `Brand: ${brand}`;
+  document.getElementById("product").textContent = `Product Type: ${productType}`;
+  document.getElementById("cash").textContent = `Cash: -$${Math.abs(cash)} (Debt)`;
+  document.getElementById("game-container").style.display = "block";
+  logMessage(`Welcome to ${brand}, specializing in ${productType}!`);
+  logMessage(`You've taken a loan of $5000 to start your business.`);
+}
+
 function produce() {
   const cost = 500;
   const unitsProduced = 100;
-  if (cash >= cost) {
+  if (cash >= cost || cash + cost >= 0) {  // Allow production as long as debt doesn't exceed 5000
     cash -= cost;
     inventory += unitsProduced;
     document.getElementById("cash").textContent = `Cash: $${cash}`;
     document.getElementById("inventory").textContent = `Inventory: ${inventory} units`;
     logMessage(`Produced ${unitsProduced} units for $${cost}.`);
   } else {
-    logMessage("Not enough cash to produce more units.");
+    logMessage("Not enough cash or credit to produce more units.");
   }
 }
 
-function sell() {
-  const unitsSold = Math.min(inventory, 100);
-  const revenue = unitsSold * pricePerUnit;
-  monthlySales = unitsSold;
-  cash += revenue;
-  inventory -= unitsSold;
-  document.getElementById("cash").textContent = `Cash: $${cash}`;
-  document.getElementById("inventory").textContent = `Inventory: ${inventory} units`;
-  document.getElementById("sales").textContent = `Monthly Sales: ${monthlySales} units`;
-  logMessage(`Sold ${unitsSold} units for $${revenue}.`);
+function buyOutlet() {
+  if (!outlet) {
+    const outletType = prompt("Choose a sales outlet:\n1. Local Store ($1000)\n2. Website ($500)\n3. Dropshipping ($300)\nEnter 1, 2, or 3:");
+    let cost;
+    switch(outletType) {
+      case "1":
+        outlet = "Local Store";
+        cost = 1000;
+        monthlySales = 50;
+        break;
+      case "2":
+        outlet = "Website";
+        cost = 500;
+        monthlySales = 30;
+        break;
+      case "3":
+        outlet = "Dropshipping";
+        cost = 300;
+        monthlySales = 20;
+        break;
+      default:
+        logMessage("Invalid choice. No outlet purchased.");
+        return;
+    }
+    if (cash >= cost || cash + cost >= 0) {
+      cash -= cost;
+      document.getElementById("cash").textContent = `Cash: $${cash}`;
+      document.getElementById("outlet").textContent = `Sales Outlet: ${outlet}`;
+      logMessage(`Purchased ${outlet} as a sales outlet for $${cost}.`);
+    } else {
+      logMessage("Not enough cash or credit for this outlet.");
+    }
+  } else {
+    logMessage("You already have a sales outlet.");
+  }
 }
 
 function advertise() {
   const adCost = 300;
-  if (cash >= adCost) {
+  if (cash >= adCost || cash + adCost >= 0) {
     cash -= adCost;
     const success = Math.random() > 0.4;  // 60% chance ad is successful
     if (success) {
@@ -101,6 +151,17 @@ function advanceMonth() {
   cash -= overheads;
   document.getElementById("cash").textContent = `Cash: $${cash}`;
   logMessage(`Monthly overheads of $${overheads} deducted.`);
+  
+  // Sell products automatically if outlet is owned
+  if (outlet) {
+    const unitsSold = Math.min(inventory, monthlySales);
+    const revenue = unitsSold * pricePerUnit * (1 + margin);
+    cash += revenue;
+    inventory -= unitsSold;
+    document.getElementById("cash").textContent = `Cash: $${cash}`;
+    document.getElementById("inventory").textContent = `Inventory: ${inventory} units`;
+    logMessage(`Sold ${unitsSold} units for $${revenue.toFixed(2)} this month.`);
+  }
 
   // Random events
   const events = ["audit", "supply delay", "competitor", "ad success"];
@@ -115,7 +176,6 @@ function advanceMonth() {
   }
 
   // Reset monthly sales
-  monthlySales = 0;
   document.getElementById("sales").textContent = `Monthly Sales: ${monthlySales} units`;
 }
 
