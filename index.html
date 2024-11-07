@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food & Beverage Tycoon</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .stats, .log { margin: 20px 0; }
+    button { margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<h1>Food & Beverage Tycoon</h1>
+<p>Grow your business from a small startup to a major market player! Manage production, sales, and navigate unexpected events.</p>
+
+<div class="stats">
+  <h3>Business Stats</h3>
+  <p id="month">Month: 1</p>
+  <p id="cash">Cash: $5000</p>
+  <p id="inventory">Inventory: 0 units</p>
+  <p id="sales">Monthly Sales: 0 units</p>
+</div>
+
+<div class="log">
+  <h3>Game Log</h3>
+  <div id="log"></div>
+</div>
+
+<div class="controls">
+  <button onclick="produce()">Produce Product</button>
+  <button onclick="sell()">Sell Product</button>
+  <button onclick="advanceMonth()">Next Month</button>
+</div>
+
+<script>
+let cash = 5000;
+let month = 1;
+let inventory = 0;
+let monthlySales = 0;
+
+function logMessage(message) {
+  const logDiv = document.getElementById("log");
+  logDiv.innerHTML = `<p>${message}</p>` + logDiv.innerHTML;
+}
+
+function produce() {
+  const cost = 500;
+  const unitsProduced = 100;
+  if (cash >= cost) {
+    cash -= cost;
+    inventory += unitsProduced;
+    document.getElementById("cash").textContent = `Cash: $${cash}`;
+    document.getElementById("inventory").textContent = `Inventory: ${inventory} units`;
+    logMessage(`Produced ${unitsProduced} units for $${cost}.`);
+  } else {
+    logMessage("Not enough cash to produce more units.");
+  }
+}
+
+function sell() {
+  const unitPrice = 15;
+  const unitsSold = Math.min(inventory, 100);
+  const revenue = unitsSold * unitPrice;
+  monthlySales = unitsSold;
+  cash += revenue;
+  inventory -= unitsSold;
+  document.getElementById("cash").textContent = `Cash: $${cash}`;
+  document.getElementById("inventory").textContent = `Inventory: ${inventory} units`;
+  document.getElementById("sales").textContent = `Monthly Sales: ${monthlySales} units`;
+  logMessage(`Sold ${unitsSold} units for $${revenue}.`);
+}
+
+function advanceMonth() {
+  month += 1;
+  document.getElementById("month").textContent = `Month: ${month}`;
+
+  // Random events
+  const events = ["audit", "supply delay", "competition", "ad success"];
+  const event = events[Math.floor(Math.random() * events.length)];
+  handleEvent(event);
+
+  // Reset monthly sales
+  monthlySales = 0;
+  document.getElementById("sales").textContent = `Monthly Sales: ${monthlySales} units`;
+}
+
+function handleEvent(event) {
+  switch(event) {
+    case "audit":
+      const auditCost = 200;
+      cash -= auditCost;
+      logMessage(`Audit completed. Cost: $${auditCost}.`);
+      break;
+    case "supply delay":
+      logMessage("Supply chain delay affected production.");
+      inventory = Math.max(inventory - 50, 0);
+      break;
+    case "competition":
+      logMessage("New competitor entered the market. Sales decreased.");
+      monthlySales = Math.max(monthlySales - 20, 0);
+      break;
+    case "ad success":
+      const boost = 500;
+      cash += boost;
+      logMessage("Successful ad campaign! Boosted sales and cash by $500.");
+      break;
+  }
+
+  document.getElementById("cash").textContent = `Cash: $${cash}`;
+  document.getElementById("inventory").textContent = `Inventory: ${inventory} units`;
+}
+
+</script>
+</body>
+</html>
