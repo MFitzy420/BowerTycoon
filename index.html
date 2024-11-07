@@ -21,6 +21,8 @@
   <p id="cash">Cash: $5000</p>
   <p id="inventory">Inventory: 0 units</p>
   <p id="sales">Monthly Sales: 0 units</p>
+  <p id="overheads">Monthly Overheads: $500</p>
+  <p id="price">Product Price: $15 per unit</p>
 </div>
 
 <div class="log">
@@ -31,6 +33,7 @@
 <div class="controls">
   <button onclick="produce()">Produce Product</button>
   <button onclick="sell()">Sell Product</button>
+  <button onclick="advertise()">Run Advertising Campaign ($300)</button>
   <button onclick="advanceMonth()">Next Month</button>
 </div>
 
@@ -39,6 +42,8 @@ let cash = 5000;
 let month = 1;
 let inventory = 0;
 let monthlySales = 0;
+let overheads = 500;
+let pricePerUnit = 15;
 
 function logMessage(message) {
   const logDiv = document.getElementById("log");
@@ -60,9 +65,8 @@ function produce() {
 }
 
 function sell() {
-  const unitPrice = 15;
   const unitsSold = Math.min(inventory, 100);
-  const revenue = unitsSold * unitPrice;
+  const revenue = unitsSold * pricePerUnit;
   monthlySales = unitsSold;
   cash += revenue;
   inventory -= unitsSold;
@@ -72,14 +76,43 @@ function sell() {
   logMessage(`Sold ${unitsSold} units for $${revenue}.`);
 }
 
+function advertise() {
+  const adCost = 300;
+  if (cash >= adCost) {
+    cash -= adCost;
+    const success = Math.random() > 0.4;  // 60% chance ad is successful
+    if (success) {
+      monthlySales += 20;
+      logMessage("Ad campaign successful! Sales increased by 20 units.");
+    } else {
+      logMessage("Ad campaign failed. No effect on sales.");
+    }
+  } else {
+    logMessage("Not enough cash for an advertising campaign.");
+  }
+  document.getElementById("cash").textContent = `Cash: $${cash}`;
+}
+
 function advanceMonth() {
   month += 1;
   document.getElementById("month").textContent = `Month: ${month}`;
+  
+  // Apply monthly overheads
+  cash -= overheads;
+  document.getElementById("cash").textContent = `Cash: $${cash}`;
+  logMessage(`Monthly overheads of $${overheads} deducted.`);
 
   // Random events
-  const events = ["audit", "supply delay", "competition", "ad success"];
+  const events = ["audit", "supply delay", "competitor", "ad success"];
   const event = events[Math.floor(Math.random() * events.length)];
   handleEvent(event);
+
+  // Increase overheads as the business grows
+  if (month % 5 === 0) {
+    overheads += 200;
+    document.getElementById("overheads").textContent = `Monthly Overheads: $${overheads}`;
+    logMessage("Business growth! Monthly overheads increased.");
+  }
 
   // Reset monthly sales
   monthlySales = 0;
@@ -97,9 +130,9 @@ function handleEvent(event) {
       logMessage("Supply chain delay affected production.");
       inventory = Math.max(inventory - 50, 0);
       break;
-    case "competition":
-      logMessage("New competitor entered the market. Sales decreased.");
-      monthlySales = Math.max(monthlySales - 20, 0);
+    case "competitor":
+      logMessage("New competitor entered the market. Choose to lower price or run a promotion.");
+      handleCompetitor();
       break;
     case "ad success":
       const boost = 500;
@@ -107,9 +140,23 @@ function handleEvent(event) {
       logMessage("Successful ad campaign! Boosted sales and cash by $500.");
       break;
   }
-
   document.getElementById("cash").textContent = `Cash: $${cash}`;
   document.getElementById("inventory").textContent = `Inventory: ${inventory} units`;
+}
+
+function handleCompetitor() {
+  const choice = prompt("A competitor has entered the market! Do you want to:\n1. Lower price by 10%\n2. Run a promotion (cost: $200)\nEnter 1 or 2:");
+  if (choice === "1") {
+    pricePerUnit *= 0.9;
+    document.getElementById("price").textContent = `Product Price: $${pricePerUnit.toFixed(2)} per unit`;
+    logMessage("Price lowered by 10% to stay competitive.");
+  } else if (choice === "2" && cash >= 200) {
+    cash -= 200;
+    monthlySales += 15;
+    logMessage("Promotion successful! Sales increased by 15 units.");
+  } else {
+    logMessage("Not enough cash for a promotion or invalid choice.");
+  }
 }
 
 </script>
